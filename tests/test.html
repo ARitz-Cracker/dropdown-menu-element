@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html data-allow-evil-attributes="1">
+	<head>
+		<style>
+			/*
+				Fun fact:
+				The colour values MenuText, ActiveBorder, Highlight, HighlightText, InactiveCaption, and
+				InactiveCaptionText are from ye olden days from when the browser would pass on the colour values
+				applied to the "Windows Classic" theme. This does effectively mean that back in the day, you had
+				everything you needed to make native-looking UI. Nowadays the use of these colour values are deprecated
+				and browsers (at least Firefox and Chromium) pass along sensible hard-coded values.
+
+				See https://www.w3.org/TR/css-color-3/#css-system
+
+				Update: I accidentally found something that seems to be a experimental new feature
+				https://caniuse.com/mdn-css_types_color_system-color_accentcolor_accentcolortext
+				This seems to be a part of a _new_ "system-colors" spec. The more things change, the more they stay the
+				same...
+			*/
+			active-dropdown-menu {
+				margin: 0px;
+				padding: 0px;
+				list-style-type: none;
+				font-size: 14px;
+
+				color: MenuText;
+				background-color: Menu;
+				border: 1px solid ActiveBorder;
+			}
+			active-dropdown-menu-item{
+				margin: 2px;
+				padding: 2px;
+				/* Puts the sub-menu arrow in the right place */
+				display: flex;
+				justify-content: space-between;
+			}
+			active-dropdown-menu-item:has(active-dropdown-menu)::after {
+				margin-left: 18px;
+				content: "▸";
+			}
+
+			/* Menu items are auto-focused on hover */
+			active-dropdown-menu-item:focus,
+			/* Menu items have this class added when they're clicked */
+			active-dropdown-menu-item.dropdown-selected,
+			/* sub-menus which are not inert are opened */
+			active-dropdown-menu-item:has(active-dropdown-menu:not([inert])) {
+				background-color: Highlight;
+				color: HighlightText;
+			}
+			/* menu items can have a "disabled" attribute, though this doesn't work with the :disabled psudo class */
+			active-dropdown-menu-item[disabled] {
+				background-color: InactiveCaption;
+				color: InactiveCaptionText;
+			}
+
+			@keyframes dropdown-open-y {
+				0% {
+					transform: scale(1, 0.01);
+					opacity: 0;
+				}
+				10% {
+					transform: scale(1, 0.01);
+					opacity: 1;	
+				}
+				100%{
+					transform: scale(1, 1);
+				}
+			}
+			@keyframes dropdown-open-x {
+				0% {
+					transform: scale(0.01, 1);
+					opacity: 0;
+				}
+				10% {
+					transform: scale(0.01, 1);
+					opacity: 1;	
+				}
+				100%{
+					transform: scale(1, 1);
+				}
+			}
+			/* Set origin for scale() based on open direction */
+			active-dropdown-menu:is(.dropdown-downward, .dropdown-rightward) {
+				/* top left */
+				transform-origin: 1px 1px;
+			}
+			active-dropdown-menu:is(.dropdown-upward, .dropdown-leftward) {
+				/* bottom-right */
+				transform-origin: calc(100% - 1px) calc(100% - 1px);
+			}
+			active-dropdown-menu:is(.dropdown-downward, .dropdown-upward) {
+				animation: 0.2s ease-in normal 0s dropdown-open-y;
+			}
+			/* Menus which are closing should play their closing animation */
+			active-dropdown-menu:is(.dropdown-downward, .dropdown-upward).dropdown-closing {
+				animation: 0.2s ease-out reverse forwards 0s dropdown-open-y;
+			}
+
+			active-dropdown-menu:is(.dropdown-rightward, .dropdown-leftward) {
+				animation: 0.3s ease-in normal 0s dropdown-open-x;
+			}
+			/* Menus which are closing should play their closing animation */
+			active-dropdown-menu:is(.dropdown-rightward, .dropdown-leftward).dropdown-closing {
+				animation: 0.3s ease-out reverse forwards 0s dropdown-open-x;
+			}
+		</style>
+		<script src="../dist/dropdown-list-element.dist.js"></script>
+		<style>
+			.test-area {
+				background-color: indigo;
+				color: white;
+				width: 150px;
+				height: 150px;
+				margin: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Context menu test</h1>
+
+		<!--
+			"#this + *" means "the element right after this one"
+			"*:has(+ #this)" means "the element before this one"
+		-->
+		
+		<div class="test-area" tabindex="0">
+			AMAZING! CUSTOMIZED RIGHT CLICK MENUS
+		</div>
+		<dropdown-menu linked-elements="*:has(+ #this)" ondropdownselect="alert('First dropdown: ' + details.selectedValue);">
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+			<dropdown-menu-item value="3" disabled>DISABLED THING</dropdown-menu-item>
+			<dropdown-menu-item>
+				MORE THINGS
+				<dropdown-menu-inner>
+					<dropdown-menu-item value="4.1">A THING AAAAAAA</dropdown-menu-item>
+				</dropdown-menu-inner>
+			</dropdown-menu-item>
+			<dropdown-menu-item value="5">ONE MORE THING</dropdown-menu-item>
+		</dropdown-menu>
+
+		<div class="test-area" tabindex="0">
+			UTTERLY INCOMPREHENSABLE!! MORE CUSTOMIZED RIGHT CLICK MENUS
+		</div>
+		<dropdown-menu linked-elements="*:has(+ #this)" ondropdownselect="alert('Second dropdown: ' + details.selectedValue);">
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+			<dropdown-menu-item value="3" disabled>NOT DISABLED THING (STILL DISABLED)</dropdown-menu-item>
+			<dropdown-menu-item>
+				MORE THINGS
+				<dropdown-menu-inner>
+					<dropdown-menu-item value="4.1">A THING AAAAAAA</dropdown-menu-item>
+					<dropdown-menu-item>
+						EVEN MORE THINGS MORE THINGS
+						<dropdown-menu-inner>
+							<dropdown-menu-item value="4.2.1">I CANNOT HANDLE THESE MANY THINGS</dropdown-menu-item>
+							<dropdown-menu-item value="4.2.2">THIS IS TOO MANY! STOP!</dropdown-menu-item>
+						</dropdown-menu-inner>
+					</dropdown-menu-item>
+					<dropdown-menu-item value="4.3">ANOTHER THING AAAAAAAA</dropdown-menu-item>
+					<dropdown-menu-item value="4.4">ANOTHER-OTHER THING AAAAAAAA</dropdown-menu-item>
+				</dropdown-menu-inner>
+			</dropdown-menu-item>
+			<hr>
+			<dropdown-menu-item value="5">ONE MORE THING</dropdown-menu-item>
+		</dropdown-menu>
+		
+		<button id="test3">CLICK TO OPEN A MENU (NOT A CONTEXT MENU)</button>
+		<dropdown-menu click-trigger="primary" linked-elements="*:has(+ #this)" ondropdownselect="alert('Third dropdown: ' + details.selectedValue);">
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+		</dropdown-menu>
+
+		<button id="test4">CLICK TO OPEN A MENU UPWARD (NOT A CONTEXT MENU)</button>
+		<dropdown-menu click-trigger="primary" open-position="element-top-rightward" linked-elements="*:has(+ #this)" ondropdownselect="alert('Fourth dropdown: ' + details.selectedValue);">
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+		</dropdown-menu>
+
+		<form style="background-color: #aaaaaa; height: 60px; overflow: scroll; position: relative;">
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<label><input type="radio" name="choice" value="1"> Your only choice</label>
+			<div style="background-color: red; color: white; position: absolute; top: 40px; left: 0px; z-index: 1000;">
+				Super secret options
+			</div>
+			<dropdown-menu linked-elements="*:has(+ #this)">
+				<dropdown-menu-item><span>Wow, checkboxes!</span><input type="checkbox" name="check1"></dropdown-menu-item>
+				<dropdown-menu-item><span>Cool!</span><input type="checkbox" name="check2"></dropdown-menu-item>
+				<dropdown-menu-item>
+					But was that your only choice?
+					<dropdown-menu-inner>
+						<dropdown-menu-item><span>Woah!</span><input type="radio" name="choice" value="2"></dropdown-menu-item>
+						<dropdown-menu-item><span>Amazing!</span><input type="radio" name="choice" value="3"></dropdown-menu-item>
+					</dropdown-menu-inner>
+				</dropdown-menu-item>
+				<hr>
+				<dropdown-menu-item value="5">ONE MORE THING</dropdown-menu-item>
+			</dropdown-menu>
+		</form>
+		
+		<div class="test-area" tabindex="0">
+			CUSTOMIZED RIGHT CLICK MENUS WITH FORMS INSIDE THEM! WONT WORK ON SAFARI BECAUSE THEY THINK DIFFERENT!
+		</div>
+		<dropdown-menu linked-elements="*:has(+ #this)">
+			<dropdown-menu-item>
+				OPTIONS 1
+				<form id="innerForm1">
+					<dropdown-menu-inner>
+						<dropdown-menu-item><span>Woah!</span><input type="radio" name="choice" value="woah"></dropdown-menu-item>
+						<dropdown-menu-item><span>Amazing!</span><input type="radio" name="choice" value="amazing"></dropdown-menu-item>
+					</dropdown-menu-inner>
+				</form>
+			</dropdown-menu-item>
+			<dropdown-menu-item>
+				OPTIONS 2
+				<form id="innerForm2">
+					<dropdown-menu-inner>
+						<dropdown-menu-item><span>Woah!</span><input type="radio" name="choice" value="woah"></dropdown-menu-item>
+						<dropdown-menu-item><span>Amazing!</span><input type="radio" name="choice" value="amazing"></dropdown-menu-item>
+					</dropdown-menu-inner>
+				</form>
+			</dropdown-menu-item>
+		</dropdown-menu>
+		<div id="notAFormTest">
+			The radio buttons below should be unaffected by the options in the right-click menus.<br>
+			...And yet they are for some reason. Oh well.<br>
+			<label><input type="radio" name="choice" value="woah">Woah!</label><br>
+			<label><input type="radio" name="choice" value="amazing">Amazing!</label><br>
+		</div>
+		<div>
+			Options 1: <span id="innerForm1Output"></span>
+		</div>
+		<div>
+			Options 2: <span id="innerForm2Output"></span>
+		</div>
+		<script>
+			function refreshinnerFormOutput() {
+				window.innerForm1Output.innerText = new URLSearchParams(new FormData(window.innerForm1)) + "";
+				window.innerForm2Output.innerText = new URLSearchParams(new FormData(window.innerForm2)) + "";
+			}
+			window.innerForm1.addEventListener("input", refreshinnerFormOutput);
+			window.innerForm2.addEventListener("input", refreshinnerFormOutput);
+			window.notAFormTest.addEventListener("input", refreshinnerFormOutput);
+		</script>
+	</body>	
+</html>
