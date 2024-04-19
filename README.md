@@ -45,10 +45,10 @@ Quickstart example:
 divWithContextMenu.addEventListener("dropdownSelect", (ev) => {
 	const {
 		selectedElement, // The <active-dropdown-menu-item> selected.
-		selectedElementOriginal, // The `<dropdown-menu-item>` used to create the `selectedElement`
-		selectedValue, // The value of the `data-value` attribute of the `selectedElementOriginal`
-		dropdownMenu, // The <dropdown-menu> used to make the menu selection
-		triggeringElement // The linked element which triggered the opening of the menu
+		selectedElementOriginal, // The `<dropdown-menu-item>` used to create the `selectedElement`.
+		selectedValue, // The value of the `value` attribute of the `selectedElementOriginal`, `undefined` if not set.
+		dropdownMenu, // The <dropdown-menu> used to make the menu selection.
+		triggeringElement // The linked element which triggered the opening of the menu.
 	} = ev.detail;
 	alert("Option " + selectedValue + " was selected!");
 });

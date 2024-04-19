@@ -4,7 +4,7 @@
 		<style>
 			/*
 				Fun fact:
-				The colour values MenuText, ActiveBorder, Highlight, HighlightText, InactiveCaption, and
+				The colour values Menu, MenuText, ActiveBorder, Highlight, HighlightText, InactiveCaption, and
 				InactiveCaptionText are from ye olden days from when the browser would pass on the colour values
 				applied to the "Windows Classic" theme. This does effectively mean that back in the day, you had
 				everything you needed to make native-looking UI. Nowadays the use of these colour values are deprecated
@@ -17,10 +17,14 @@
 				This seems to be a part of a _new_ "system-colors" spec. The more things change, the more they stay the
 				same...
 			*/
+
+			/*
+				These are the elements which actually get shown to the user, they are automatically created and
+				appended to the end of the <body> when a <dropdown-menu> is "opened".
+			*/
 			active-dropdown-menu {
 				margin: 0px;
 				padding: 0px;
-				list-style-type: none;
 				font-size: 14px;
 
 				color: MenuText;
@@ -30,7 +34,7 @@
 			active-dropdown-menu-item{
 				margin: 2px;
 				padding: 2px;
-				/* Puts the sub-menu arrow in the right place */
+				/* Puts the sub-menu arrow or the input in the right place */
 				display: flex;
 				justify-content: space-between;
 			}
@@ -52,6 +56,12 @@
 			active-dropdown-menu-item[disabled] {
 				background-color: InactiveCaption;
 				color: InactiveCaptionText;
+			}
+
+			/* classes on the <dropdown-menu> are copied to the <active-dropdown-menu> */
+			active-dropdown-menu.matching-width {
+				/* This CSS variable is set to the root <active-dropdown-menu> */
+				min-width: var(--triggering-element-client-width);
 			}
 
 			@keyframes dropdown-open-y {
@@ -119,14 +129,22 @@
 	<body>
 		<h1>Context menu test</h1>
 
-		<!--
-			"#this + *" means "the element right after this one"
-			"*:has(+ #this)" means "the element before this one"
-		-->
-		
 		<div class="test-area" tabindex="0">
 			AMAZING! CUSTOMIZED RIGHT CLICK MENUS
 		</div>
+		<!--
+			linked-elements takes a query selector. The "#this" selector will only work if there are no elements in the
+			document with id="this".
+
+			"#this + *" means "the element right after this one"
+			"*:has(+ #this)" means "the element before this one"
+			
+			Of course, you could reference the linked element by its ID, but that's not fun, or very copy-pasteable,
+			nor would it allow the ability to link to multiple elements.
+
+			the use of the "ondropdownselect" attribute is only possible because the root <html> element has
+			data-allow-evil-attributes="1".
+		-->
 		<dropdown-menu linked-elements="*:has(+ #this)" ondropdownselect="alert('First dropdown: ' + details.selectedValue);">
 			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
 			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
@@ -166,27 +184,61 @@
 			<dropdown-menu-item value="5">ONE MORE THING</dropdown-menu-item>
 		</dropdown-menu>
 		
-		<button id="test3">CLICK TO OPEN A MENU (NOT A CONTEXT MENU)</button>
-		<dropdown-menu click-trigger="primary" linked-elements="*:has(+ #this)" ondropdownselect="alert('Third dropdown: ' + details.selectedValue);">
+		<button>CLICK TO OPEN A MENU (NOT A CONTEXT MENU)</button>
+		<dropdown-menu
+			click-trigger="primary"
+			linked-elements="*:has(+ #this)"
+			ondropdownselect="alert('Third dropdown: ' + details.selectedValue);"
+		>
 			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
 			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
 		</dropdown-menu>
 
-		<button id="test4">CLICK TO OPEN A MENU UPWARD (NOT A CONTEXT MENU)</button>
-		<dropdown-menu click-trigger="primary" open-position="element-top-rightward" linked-elements="*:has(+ #this)" ondropdownselect="alert('Fourth dropdown: ' + details.selectedValue);">
+		<button>CLICK TO OPEN A MENU UPWARD (NOT A CONTEXT MENU)</button>
+		<dropdown-menu
+			click-trigger="primary"
+			open-position="element-top-rightward"
+			linked-elements="*:has(+ #this)"
+			ondropdownselect="alert('Fourth dropdown: ' + details.selectedValue);"
+		>
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+		</dropdown-menu>
+		<br>
+		<button>CLICK TO OPEN A MENU WITH MATCHING WIDTH</button>
+		<!-- The "matching-width" is defined in the <style> above -->
+		<dropdown-menu
+			class="matching-width"
+			click-trigger="primary"
+			open-position="element-bottom-centered"
+			linked-elements="*:has(+ #this)"
+			ondropdownselect="alert('Fifth dropdown: ' + details.selectedValue);"
+		>
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+		</dropdown-menu>
+
+		<button>CLICK TO OPEN A MENU WITH MATCHING WIDTH</button>
+		<dropdown-menu
+			class="matching-width"
+			click-trigger="primary"
+			open-position="element-top-centered"
+			linked-elements="*:has(+ #this)"
+			ondropdownselect="alert('Sixth dropdown: ' + details.selectedValue);"
+		>
 			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
 			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
 		</dropdown-menu>
 
 		<form style="background-color: #aaaaaa; height: 60px; overflow: scroll; position: relative;">
-			<p>aaaaaaaaaaaaaaaaaaa</p>
-			<p>aaaaaaaaaaaaaaaaaaa</p>
-			<p>aaaaaaaaaaaaaaaaaaa</p>
-			<p>aaaaaaaaaaaaaaaaaaa</p>
-			<p>aaaaaaaaaaaaaaaaaaa</p>
-			<p>aaaaaaaaaaaaaaaaaaa</p>
 			<label><input type="radio" name="choice" value="1"> Your only choice</label>
-			<div style="background-color: red; color: white; position: absolute; top: 40px; left: 0px; z-index: 1000;">
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<p>aaaaaaaaaaaaaaaaaaa</p>
+			<div style="background-color: red; color: white; position: absolute; top: 100px; left: 0px; z-index: 1000;">
 				Super secret options
 			</div>
 			<dropdown-menu linked-elements="*:has(+ #this)">

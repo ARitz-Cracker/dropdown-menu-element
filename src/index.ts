@@ -161,13 +161,8 @@ let allowEvilAttributes = Boolean(document.documentElement.dataset.allowEvilAttr
  * * `ondropdownopen`: See the {@link DropdownMenuElement.ondropdownopen | `ondropdownopen` property}
  * * `open-position`: See the {@link DropdownMenuElement.openPosition | `openPosition` property}
  * 
- * This is how the inner children should be defined.
- * 
- * * The direct children of this element should _only_ be {@link DropdownMenuItemElement | `<dropdown-menu-item>`} or
- *   `<hr>` elements.
- * {@link DropdownSelectEventDetails.selectedValue | `details.selectedValue`} property used in the
- * {@link DropdownSelectEvent | `"dropdownSelect"`} event or the
- * {@link DropdownMenuElement.ondropdownselect | `ondropdownselect`} callback.
+ * The direct children of this element should _only_ be {@link DropdownMenuItemElement | `<dropdown-menu-item>`} or
+ * `<hr>` elements.
  * 
  * If your menus contain inputs, such as check boxes or radio buttons, any programatic changes to their `value` and
  * `checked` properties will not be reflected while the menu is open. `"input"` and `"change"` events will still be
@@ -277,6 +272,24 @@ export class DropdownMenuElement extends HTMLElement {
 				originalRootMenu: this,
 				originalTriggeringElement: ev.currentTarget,
 			});
+			newActiveMenu.style.setProperty(
+				'--triggering-element-client-width',
+				ev.currentTarget.clientWidth + "px"
+			);
+			newActiveMenu.style.setProperty(
+				'--triggering-element-client-height',
+				ev.currentTarget.clientHeight + "px"
+			);
+			if (ev.currentTarget instanceof HTMLElement) {
+				newActiveMenu.style.setProperty(
+					'--triggering-element-offset-width',
+					ev.currentTarget.offsetWidth + "px"
+				);
+				newActiveMenu.style.setProperty(
+					'--triggering-element-offset-height',
+					ev.currentTarget.clientHeight + "px"
+				);
+			}
 			newActiveMenu.open(ev, this.openPosition);
 		}
 	}
@@ -1273,6 +1286,7 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 						"active-dropdown-menu:not([inert])"
 					) as NodeListOf<ActiveDropdownMenuElement>
 				).forEach(elem => {
+					// "inert" is used as an "is closed" check, so we better be consistent
 					elem.inert = true;
 					hide(elem);
 				});
@@ -1300,6 +1314,7 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 							"active-dropdown-menu:not([inert]"
 						) as NodeListOf<ActiveDropdownMenuElement>
 					).forEach(elem => {
+						// "inert" is used as an "is closed" check, so we better be consistent
 						elem.inert = true;
 						hide(elem);
 					});
@@ -1510,17 +1525,58 @@ export class ActiveDropdownMenuItemElement extends HTMLElement {
 		
 		if (subMenu) {
 			this.ariaHasPopup = "menu";
-			const openSubMenu = (ev: MouseEvent) => {
+			let menuOpenTimer: ReturnType<typeof setTimeout> | undefined;
+			this.addEventListener("click", (ev: MouseEvent) => {
 				if (subMenu.contains(ev.target as Element | null)) {
 					return;
 				}
 				if (this.disabled) {
 					return;
 				}
+				if (menuOpenTimer != undefined) {
+					clearTimeout(menuOpenTimer);
+					menuOpenTimer = undefined;
+				}
 				subMenu.open(ev, "element-right-downward");
-			};
-			this.addEventListener("click", openSubMenu);
-			this.addEventListener("mouseenter", openSubMenu);
+			});
+			this.addEventListener("mouseenter", (ev: MouseEvent) => {
+				if (subMenu.contains(ev.target as Element | null)) {
+					return;
+				}
+				if (this.disabled) {
+					return;
+				}
+				// Having dropdown menus immediately open proved distracting if they had open and close animations.
+				// It is kind of expected that that sub-menu's won't open if you're "quickly" moving your mouse over
+				// The entire menu.
+				menuOpenTimer = setTimeout(
+					() => {
+						// Menus and their sub-menus explicitly become inert when they're closed or closing
+						if (parentMenu.inert) {
+							return;
+						}
+						subMenu.open(ev, "element-right-downward");
+					},
+					// Through my completely unscientific testing with a sample size of 1, "quickly" means approx 240px
+					// per second. These are CSS pixels anyway, which are a lie on high-DPI displays. (Yay)
+					Math.min(
+						Math.min(
+							this.offsetHeight,
+							this.offsetWidth
+						) * 4,
+						500 // https://youtu.be/R_b2B5tKBUM?t=88
+					)
+				);
+			});
+			this.addEventListener("mouseleave", (ev: MouseEvent) => {
+				if (subMenu.contains(ev.target as Element | null)) {
+					return;
+				}
+				if (menuOpenTimer != undefined) {
+					clearTimeout(menuOpenTimer);
+					menuOpenTimer = undefined;
+				}
+			});
 		} else {
 			this.addEventListener("click", (ev) => {
 				if (this.disabled) {
