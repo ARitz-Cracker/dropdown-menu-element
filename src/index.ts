@@ -1017,19 +1017,23 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 			clearTimeout(this.#closeAnimationTimeout);
 		}
 
-		const maxY = Math.max(
-			document.body.scrollHeight,
-			document.body.offsetHeight, 
-			document.documentElement.clientHeight,
-			document.documentElement.scrollHeight,
-			document.documentElement.offsetHeight
+		const maxY = Math.floor(
+			Math.max(
+				document.body.scrollHeight,
+				document.body.offsetHeight, 
+				document.documentElement.clientHeight,
+				document.documentElement.scrollHeight,
+				document.documentElement.offsetHeight
+			)
 		);
-		const maxX = Math.max(
-			document.body.scrollWidth,
-			document.body.offsetWidth,
-			document.documentElement.clientWidth,
-			document.documentElement.scrollWidth,
-			document.documentElement.offsetWidth
+		const maxX = Math.floor(
+			Math.max(
+				document.body.scrollWidth,
+				document.body.offsetWidth,
+				document.documentElement.clientWidth,
+				document.documentElement.scrollWidth,
+				document.documentElement.offsetWidth
+			)
 		);
 		this.classList.remove(
 			"dropdown-closing",
@@ -1109,72 +1113,72 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		void this.offsetWidth;
 		switch (position) {
 			case "element-bottom-centered":
-				pageXPos = (trigElemPagePosLeft + trigElemPagePosRight) / 2 - (this.offsetWidth / 2);
-				pageYPos = trigElemPagePosBottom;
+				pageXPos = Math.round((trigElemPagePosLeft + trigElemPagePosRight) / 2 - (this.offsetWidth / 2));
+				pageYPos = Math.ceil(trigElemPagePosBottom)
 				this.classList.add("dropdown-downward");
 				break;
 			case "element-bottom-leftward":
 				// bottom-right, towards left
-				pageXPos = trigElemPagePosRight - this.offsetWidth;
-				pageYPos = trigElemPagePosBottom
+				pageXPos = Math.round(trigElemPagePosRight - this.offsetWidth);
+				pageYPos = Math.ceil(trigElemPagePosBottom);
 				this.classList.add("dropdown-downward");
 				break;
 			case "element-bottom-rightward":
 				// bottom-left, towards right
-				pageXPos = trigElemPagePosLeft;
-				pageYPos = trigElemPagePosBottom;
+				pageXPos = Math.round(trigElemPagePosLeft);
+				pageYPos = Math.ceil(trigElemPagePosBottom);
 				this.classList.add("dropdown-downward");
 				break;
 			case "element-left-centered":
-				pageXPos = trigElemPagePosLeft - this.offsetWidth;
-				pageYPos = (trigElemPagePosTop + trigElemPagePosBottom) / 2 - (this.clientHeight / 2);
+				pageXPos = Math.floor(trigElemPagePosLeft - this.offsetWidth);
+				pageYPos = Math.round((trigElemPagePosTop + trigElemPagePosBottom) / 2 - (this.clientHeight / 2));
 				this.classList.add("dropdown-leftward");
 				break;
 			case "element-left-downward":
-				pageXPos = trigElemPagePosLeft - this.offsetWidth;
-				pageYPos = trigElemPagePosTop;
+				pageXPos = Math.floor(trigElemPagePosLeft - this.offsetWidth);
+				pageYPos = Math.round(trigElemPagePosTop);
 				this.classList.add("dropdown-leftward");
 				break;
 			case "element-left-upward":
-				pageXPos = trigElemPagePosLeft - this.offsetWidth;
-				pageYPos = trigElemPagePosBottom - this.clientHeight;
+				pageXPos = Math.floor(trigElemPagePosLeft - this.offsetWidth);
+				pageYPos = Math.round(trigElemPagePosBottom - this.clientHeight);
 				this.classList.add("dropdown-leftward");
 				break;
 			case "element-right-centered":
-				pageXPos = trigElemPagePosRight;
-				pageYPos = (trigElemPagePosTop + trigElemPagePosBottom) / 2 - (this.clientHeight / 2);
+				pageXPos = Math.ceil(trigElemPagePosRight);
+				pageYPos = Math.round((trigElemPagePosTop + trigElemPagePosBottom) / 2 - (this.clientHeight / 2));
 				this.classList.add("dropdown-rightward");
 				break;
 			case "element-right-downward":
-				pageXPos = trigElemPagePosRight;
-				pageYPos = trigElemPagePosTop;
+				pageXPos = Math.ceil(trigElemPagePosRight);
+				pageYPos = Math.round(trigElemPagePosTop);
 				this.classList.add("dropdown-rightward");
 				break;
 			case "element-right-upward":
-				pageXPos = trigElemPagePosRight;
-				pageYPos = trigElemPagePosBottom - this.clientHeight;
+				pageXPos = Math.ceil(trigElemPagePosRight);
+				pageYPos = Math.round(trigElemPagePosBottom - this.clientHeight);
 				this.classList.add("dropdown-rightward");
 				break;
 			case "element-top-centered":
-				pageXPos = (trigElemPagePosLeft + trigElemPagePosRight) / 2 - (this.offsetWidth / 2);
-				pageYPos = trigElemPagePosTop - this.clientHeight;
+				pageXPos = Math.round((trigElemPagePosLeft + trigElemPagePosRight) / 2 - (this.offsetWidth / 2));
+				pageYPos = Math.floor(trigElemPagePosTop - this.clientHeight);
 				this.classList.add("dropdown-upward");
 				break;
 			case "element-top-leftward":
 				// top-right, towards left
-				pageXPos = trigElemPagePosRight - this.offsetWidth;
-				pageYPos = trigElemPagePosTop - this.clientHeight;
+				pageXPos = Math.round(trigElemPagePosRight - this.offsetWidth);
+				pageYPos = Math.floor(trigElemPagePosTop - this.clientHeight);
 				this.classList.add("dropdown-upward");
 				break;
 			case "element-top-rightward":
 				// top-left, towards right
-				pageXPos = trigElemPagePosLeft;
-				pageYPos = trigElemPagePosTop - this.clientHeight;
+				pageXPos = Math.round(trigElemPagePosLeft);
+				pageYPos = Math.floor(trigElemPagePosTop - this.clientHeight);
 				this.classList.add("dropdown-upward");
 				break;
 			case "pointer":
-				pageXPos = event.pageX;
-				pageYPos = event.pageY;
+				pageXPos = Math.ceil(event.pageX);
+				pageYPos = Math.ceil(event.pageY);
 				if ((event.pageY + this.clientHeight) > maxY) {
 					if ((event.pageX + this.clientWidth) > maxX) {
 						pageXPos -= this.offsetWidth;
@@ -1459,6 +1463,7 @@ export class ActiveDropdownMenuItemElement extends HTMLElement {
 			const passThroughCallback = (ev: Event) => {
 				if (originalInput.type == "checkbox" || originalInput.type == "radio") {
 					originalInput.checked = pointerInput.checked;
+					this.focus(); // Return focus back to the menu item itself.
 				} else {
 					originalInput.value = pointerInput.value;
 				}
@@ -1485,8 +1490,10 @@ export class ActiveDropdownMenuItemElement extends HTMLElement {
 			// relevant input.
 			if (pointerInputs[0].type == "radio") {
 				this.setAttribute("role", "menuitemradio");
+				pointerInputs[0].tabIndex = -1;
 			} else if (pointerInputs[0].type == "checkbox") {
 				this.setAttribute("role", "menuitemcheckbox");
+				pointerInputs[0].tabIndex = -1;
 			} else {
 				this.setAttribute("role", "menuitem");
 			}
