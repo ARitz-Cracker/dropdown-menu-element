@@ -1226,6 +1226,10 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		this.style.left = pageXPos + "px";
 		this.style.top = pageYPos + "px";
 		this.inert = false;
+		if (document.querySelector(":focus-visible") != null) {
+			// Probably using keyboard navigation
+			this.firstMenuItem?.focus();
+		}
 	}
 	/**
 	 * Closes the sub-menu if it is opened
@@ -1467,7 +1471,9 @@ export class ActiveDropdownMenuItemElement extends HTMLElement {
 				} else {
 					originalInput.value = pointerInput.value;
 				}
-
+				if (pointerInputs.length == 1) {
+					this.ariaChecked = pointerInput.checked + "";
+				}
 				// We can't re-dispatch an existing event, so we gotta clone it
 				const clonedEventInit = {} as any;
 				// Apparently important properties like `bubbles` may not be on ev itself, but on the prototype.
@@ -1488,12 +1494,15 @@ export class ActiveDropdownMenuItemElement extends HTMLElement {
 		if (pointerInputs.length == 1) {
 			// As far as I understand, I shouldn't need to use the "aria-checked" attribute if I already use the
 			// relevant input.
+			// Update: No they don't. Set ariaChecked property.
 			if (pointerInputs[0].type == "radio") {
 				this.setAttribute("role", "menuitemradio");
 				pointerInputs[0].tabIndex = -1;
+				this.ariaChecked = pointerInputs[0].checked + "";
 			} else if (pointerInputs[0].type == "checkbox") {
 				this.setAttribute("role", "menuitemcheckbox");
 				pointerInputs[0].tabIndex = -1;
+				this.ariaChecked = pointerInputs[0].checked + "";
 			} else {
 				this.setAttribute("role", "menuitem");
 			}
