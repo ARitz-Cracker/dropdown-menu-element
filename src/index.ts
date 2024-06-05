@@ -1191,9 +1191,9 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 				}
 		}
 		// Clamp the menu position so hopefully the entire thing fits within view
-		pageXPos -= Math.max(0, pageXPos + this.clientWidth - maxX);
+		pageXPos -= Math.max(0, pageXPos + this.offsetWidth - maxX);
 		pageXPos = Math.max(0, pageXPos);
-		pageYPos -= Math.max(0, pageYPos + this.clientHeight - maxY);
+		pageYPos -= Math.max(0, pageYPos + this.offsetHeight - maxY);
 		pageYPos = Math.max(0, pageYPos);
 
 		
