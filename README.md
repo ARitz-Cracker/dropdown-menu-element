@@ -59,9 +59,10 @@ A more detailed example can be found in the `tests/test.html` file. If you wish 
 
 ## Documentation
 
-Hosted docs soon™. Though this project is full of tsdoc comments for your viewing pleasure. They can be generated into
-pretty `.html` files by running `npm run docs`. To get started, take a look at the
-{@link DropdownMenuElement | `DropdownMenuElement`} class documentation and explore from there.
+This project is full of tsdoc comments for your contextual viewing pleasure, even with the custom DOM events!
+
+A good place to start would be taking a look at the documentation for the `<dropdown-menu>` element via the 
+[`DropdownMenuElement` class](https://docs.aritzcracker.ca/npm/dropdown-menu-element/classes/DropdownMenuElement.html)
 
 ## Compatibility notes
 
