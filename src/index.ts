@@ -590,7 +590,7 @@ customElements.define("dropdown-menu", DropdownMenuElement);
  * This element has additional HTML attributes which can be used to define its behaviour. For more information, see the
  * linked documentation listed below.
  * 
- * * `disabled`: See the {@link DropdownMenuItemElement.value | `disabled` property}
+ * * `disabled`: See the {@link DropdownMenuItemElement.disabled | `disabled` property}
  * * `value`: See the {@link DropdownMenuItemElement.value | `value` property}
  * 
  */
