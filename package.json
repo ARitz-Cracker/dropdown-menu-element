@@ -15,7 +15,7 @@
 		"right click",
 		"custom element"
 	],
-	"version": "1.1.4",
+	"version": "1.2.0",
 	"license": "GPL-3.0-or-later",
 	"author": {
 		"name": "Aritz Beobide-Cardinal",
@@ -33,11 +33,13 @@
 	"type": "module",
 	"scripts": {
 		"build": "rm -rf dist/* && mkdir -p dist && tsc",
+		"build-standalone:dev": "webpack --mode=development",
+		"build-standalone:final": "webpack --mode=production",
 		"build-standalone": "webpack --mode=development && webpack --mode=production",
 		"docs": "typedoc src/index.ts"
 	},
 	"dependencies": {
-		"@aritz-cracker/browser-utils": "^1.3.1"
+		"@aritz-cracker/browser-utils": "^1.3.2"
 	},
 	"devDependencies": {
 		"ts-loader": "^9.5.1",
@@ -51,6 +53,7 @@
 		"dist/index.d.ts"
 	],
 	"sideEffects": [
-		"dist/index.js"
+		"dist/index.js",
+		"src/index.ts"
 	]
 }

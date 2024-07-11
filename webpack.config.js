@@ -36,9 +36,12 @@ export default (env, argv) => {
 			concatenateModules: true,
 			flagIncludedChunks: true,
 			removeAvailableModules: true,
-			sideEffects: true
+			innerGraph: true,
+			sideEffects: true,
+			removeEmptyChunks: true
 		},
-		mode: argv.mode
+		mode: argv.mode,
+		stats: "detailed"// argv.mode == "production" ? "normal" : "detailed"
 	};
 	console.log("config.mode:", config.mode);
 	return config;

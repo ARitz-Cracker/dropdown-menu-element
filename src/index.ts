@@ -1,6 +1,6 @@
 import { parseCSSTime } from "@aritz-cracker/browser-utils";
 
-export type DropdownTriggeringClick = "primary" | "secondary";
+export type DropdownTriggeringClick = "primary" | "secondary" | "both";
 /**
  * This is used to specify where the dropdown menu should be opened.
  * 
@@ -53,6 +53,11 @@ export type DropdownOpenPosition =
 /**
  * The event type used in `element.addEventListener("dropdownSelect", ...)`
  * 
+ * This is a [DOM event](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) using the
+ * [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail) type with the event name
+ * `"dropdownSelect"`. The  {@link DropdownSelectEventDetails | `DropdownSelectEventDetails`} will be on the
+ * `.details` property of this object.
+ * 
  * When a menu option is selected, a non-bubbling version of this event is emitted on the {@link DropdownMenuElement}.
  * If that event isn't cancelled, (that is, if `preventDefault()` was not called) a bubbling version of this event is
  * emitted on the element which originally triggered the opening of the menu. If that event also isn't cancelled, then
@@ -91,6 +96,11 @@ export type DropdownSelectCallback = (details: DropdownSelectEventDetails) => vo
 
 /**
  * The event type used in `element.addEventListener("dropdownOpen", ...)`
+ * 
+ * This is a [DOM event](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) using the
+ * [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail) type with the event name
+ * `"dropdownSelect"`. The  {@link DropdownOpenEventDetails | `DropdownOpenEventDetails`} will be on the `.details`
+ * property of this object.
  * 
  * This event is emitted when a root {@link DropdownMenuElement | `<dropdown-menu>`} is about to be opened. It does not
  * get emitted when a sub-menu opens.
@@ -411,6 +421,12 @@ export class DropdownMenuElement extends HTMLElement {
 			).querySelectorAll(this.#linkedElementsSelector);
 			this.#linkedElements.forEach(elem => {
 				switch(this.#clickTrigger) {
+					case "secondary":
+						elem.addEventListener("contextmenu", this);
+						break;
+					case "both":
+						elem.addEventListener("contextmenu", this);
+						// Falls through
 					case "primary":
 						elem.addEventListener("click", this);
 						if (
@@ -421,11 +437,9 @@ export class DropdownMenuElement extends HTMLElement {
 							elem.ariaHasPopup = "menu";
 						}
 						break;
-					case "secondary":
-						elem.addEventListener("contextmenu", this);
-						break;
 					default:
-						// No default
+						// no default
+
 				}
 			});
 		} finally {
@@ -441,7 +455,7 @@ export class DropdownMenuElement extends HTMLElement {
 	 * `"secondary"`.
 	 * 
 	 * A value of `"primary"` means this menu will be opened on `"click"` events. A value of `"secondary"`, means this
-	 * menu will be opened on `"contextmenu"` events.
+	 * menu will be opened on `"contextmenu"` events. A value of "both" listens to both.
 	 */
 	get clickTrigger(): DropdownTriggeringClick {
 		return this.#clickTrigger;
@@ -454,17 +468,21 @@ export class DropdownMenuElement extends HTMLElement {
 		}
 	}
 	static normalizeClickTriggerAttribute(v: string | null): DropdownTriggeringClick {
-		if (v == "primary") {
-			return "primary";
+		switch (v) {
+			case "primary":
+			case "both":
+				return v;
+			case "secondary":
+			default:
+				return "secondary";
 		}
-		return "secondary";
 	}
 
 	#openPosition: DropdownOpenPosition | null = null;
 	/**
 	 * Reflects the value of the `open-position` attribute. If not set, or set to an invalid value, this defaults to
-	 * `"element-bottom-rightward"` if {@link DropdownMenuElement.clickTrigger | `click-trigger`} is `"primary"`, or
-	 * `"pointer"` if {@link DropdownMenuElement.clickTrigger | `click-trigger`} is `"secondary"`.
+	 * `"element-bottom-rightward"` if {@link DropdownMenuElement.clickTrigger | `click-trigger`} is `"primary" ||
+	 * "both"`, or `"pointer"` if {@link DropdownMenuElement.clickTrigger | `click-trigger`} is `"secondary"`.
 	 * 
 	 * See the {@link DropdownOpenPosition} documentation for details
 	 */
@@ -472,10 +490,13 @@ export class DropdownMenuElement extends HTMLElement {
 		if (this.#openPosition) {
 			return this.#openPosition;
 		}
-		if (this.#clickTrigger == "primary") {
-			return "element-bottom-rightward";
+		switch (this.#clickTrigger) {
+			case "primary":
+			case "both":
+				return "element-bottom-rightward";
+			default:
+				return "pointer";
 		}
-		return "pointer";
 	}
 	set openPosition(v: string | null) {
 		const actualNewValue = DropdownMenuElement.normalizeOpenPositionAttribute(v);
@@ -763,7 +784,7 @@ document.addEventListener("contextmenu", (ev) => {
 		if (
 			activeRootDropdownMenu.contains(clickedElem) ||
 			(
-				activeRootDropdownMenu.originalRootMenu.clickTrigger == "secondary" &&
+				activeRootDropdownMenu.originalRootMenu.clickTrigger != "primary" &&
 				activeRootDropdownMenu.triggeringElement.contains(clickedElem)
 			)
 		) {
@@ -784,7 +805,7 @@ document.addEventListener("click", (ev) => {
 		if (
 			activeRootDropdownMenu.contains(clickedElem) ||
 			(
-				activeRootDropdownMenu.originalRootMenu.clickTrigger == "primary" &&
+				activeRootDropdownMenu.originalRootMenu.clickTrigger != "secondary" &&
 				activeRootDropdownMenu.triggeringElement.contains(clickedElem)
 			)
 		) {

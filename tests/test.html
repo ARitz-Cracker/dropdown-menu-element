@@ -230,6 +230,17 @@
 			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
 		</dropdown-menu>
 
+
+		<button>THIS BUTTONS OPENS A MENU ON BOTH CLICK TYPES!!!</button>
+		<dropdown-menu
+			click-trigger="both"
+			linked-elements="*:has(+ #this)"
+			ondropdownselect="alert('Seventh dropdown: ' + details.selectedValue);"
+		>
+			<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+			<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+		</dropdown-menu>
+
 		<form style="background-color: #aaaaaa; height: 60px; overflow: scroll; position: relative;">
 			<label><input type="radio" name="choice" value="1"> Your only choice</label>
 			<p>aaaaaaaaaaaaaaaaaaa</p>
