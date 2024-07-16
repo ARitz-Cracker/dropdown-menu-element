@@ -311,5 +311,36 @@
 			window.innerForm2.addEventListener("input", refreshinnerFormOutput);
 			window.notAFormTest.addEventListener("input", refreshinnerFormOutput);
 		</script>
+
+		<p>OH NOO! THIS DOESN'T WORK WITH DIALOGS, OR DOES IT?!</p>
+		<button id="dialog_open_test">Show dialog</button>
+		<dialog id="dialog_test">
+			<p>RIGHT CLICK ON THIS PARAGRAPH TO OPEN A MENU</p>
+			<dropdown-menu
+				linked-elements="*:has(+ #this)"
+				ondropdownselect="alert('First dialog dropdown: ' + details.selectedValue);"
+			>
+				<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+				<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+			</dropdown-menu>
+			<button>CLICK TO OPEN A MENU (NOT A CONTEXT MENU)</button>
+			<dropdown-menu
+				click-trigger="primary"
+				linked-elements="*:has(+ #this)"
+				ondropdownselect="alert('Second dialog dropdown: ' + details.selectedValue);"
+			>
+				<dropdown-menu-item value="1">A THING</dropdown-menu-item>
+				<dropdown-menu-item value="2">ANOTHER THING</dropdown-menu-item>
+			</dropdown-menu>
+			<button id="dialog_close_button">Close</button>
+		</dialog>
+		<script>
+			window.dialog_open_test.addEventListener("click", () => {
+  				window.dialog_test.showModal();
+			});
+			dialog_close_button.addEventListener("click", () => {
+				window.dialog_test.close();
+			})
+		</script>
 	</body>	
 </html>

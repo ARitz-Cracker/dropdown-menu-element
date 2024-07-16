@@ -1,4 +1,4 @@
-import { parseCSSTime } from "@aritz-cracker/browser-utils";
+import { parseCSSTime, preventDefault } from "@aritz-cracker/browser-utils";
 
 export type DropdownTriggeringClick = "primary" | "secondary" | "both";
 /**
@@ -1014,6 +1014,7 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		return this.#pageYPos;
 	}
 	#closeAnimationTimeout: ReturnType<typeof setTimeout> | undefined;
+	#inModal: boolean = false;
 	/**
 	 * @internal
 	 */
@@ -1027,7 +1028,34 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 			// The connectedCallback automatically hides this element (as it cannot be done in the constructor), so we
 			// must attempt to open this menu again after we're in the document.
 			this.#pendingOpen = [event, position];
-			document.body.append(this);
+
+			// The only way (at the time of writing) we can draw over modals is to also be a modal
+			if (this.#originalRootMenu.matches("dialog:modal dropdown-menu")) {
+				this.#inModal = true;
+				const modal = document.createElement("dialog");
+				modal.addEventListener("close", (_) => {
+					modal.remove();
+				});
+				modal.addEventListener("cancel", preventDefault);
+				modal.append(this);
+				modal.style.background = "none";
+				modal.style.margin = "0";
+				modal.style.padding = "0";
+				modal.style.border = "none";
+				modal.style.width = "100%";
+				modal.style.height = "100%";
+				modal.style.maxWidth = "100%";
+				modal.style.maxHeight = "100%";
+				document.body.append(modal);
+				if (getComputedStyle(modal, "::backdrop").background != "none") {
+					const style = document.createElement("style");
+					style.innerHTML = "dialog:has(active-dropdown-menu:only-child)::backdrop {background: none !important;}";
+					document.head.append(style);
+				}
+				modal.showModal();
+			} else {
+				document.body.append(this);
+			}
 			return;
 		}
 		if (!this.inert) {
@@ -1244,6 +1272,15 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 			// Let's account for ours too on the Y axis since having the menus (mostly) align looks prettier
 			pageYPos -= (this.offsetHeight - this.clientHeight);
 		}
+		if (this.#inModal) {
+			pageXPos -= (event.pageX - event.clientX);
+			pageYPos -= (event.pageY - event.clientY);
+			if (this.#rootMenu == this && this.parentElement) {
+				this.parentElement.inert = false;
+				this.parentElement.style.pointerEvents == "";
+				this.parentElement.style.userSelect == "";
+			}
+		}
 		this.style.left = pageXPos + "px";
 		this.style.top = pageYPos + "px";
 		this.inert = false;
@@ -1307,6 +1344,9 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		// isNaN also implicitly covers the case which animationIterationCount is "infinite"
 		if (oldFullAnimation == newFullAnimation || isNaN(animationTime) || animationTime <= 0) {
 			if (this.#rootMenu == this) {
+				if (this.#inModal) {
+					this.parentElement?.remove();
+				}
 				this.remove();
 			} else {
 				hide(this);
@@ -1321,6 +1361,11 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 				});
 			}
 		} else {
+			if (this.#rootMenu == this && this.#inModal && this.parentElement) {
+				this.parentElement.inert = true;
+				this.parentElement.style.pointerEvents == "none";
+				this.parentElement.style.userSelect == "none";
+			}
 			if (animationFillMode == "none") {
 				console.warn(
 					"<active-dropdown-menu class=\"" + this.classList.value + "\"> has a closing animation with " +
@@ -1335,6 +1380,9 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 			this.style.animation = "";
 			this.#closeAnimationTimeout = setTimeout(() => {
 				if (this.#rootMenu == this) {
+					if (this.#inModal) {
+						this.parentElement?.remove();
+					}
 					this.remove();
 				} else {
 					hide(this);
