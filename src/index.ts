@@ -216,7 +216,6 @@ export class DropdownMenuElement extends HTMLElement {
 			"linked-elements",
 			"ondropdownselect",
 			"ondropdownopen",
-			"ondropdownclose",
 			"open-position"
 		];
 	}
@@ -603,7 +602,35 @@ export class DropdownMenuElement extends HTMLElement {
 	 */
 	connectedCallback() {
 		hide(this);
-		this.refreshLinkedElements();
+		// This object may have been interacted with before it was initialized or otherwise registered as a custom
+		// element. Which means, properties get assigned onto "this" instead of running the setter on the prototype.
+		if (this.hasOwnProperty("ondropdownselect")) {
+			const value = this.ondropdownselect;
+			delete (this as any).ondropdownselect; // Delete the property that's actually on "this"
+			this.ondropdownselect = value; // Run the setter on the prototype
+		}
+		if (this.hasOwnProperty("ondropdownopen")) {
+			const value = this.ondropdownopen;
+			delete (this as any).ondropdownopen;
+			this.ondropdownopen = value;
+		}
+		if (this.hasOwnProperty("linkedElements")) {
+			const value = this.linkedElements;
+			delete (this as any).linkedElements;
+			this.#linkedElementsSelector = value; // refreshLinkedElements called later
+		}
+		if (this.hasOwnProperty("clickTrigger")) {
+			const value = this.clickTrigger;
+			delete (this as any).clickTrigger;
+			this.clickTrigger = value; // calls refreshLinkedElements
+		} else {
+			this.refreshLinkedElements();
+		}
+		if (this.hasOwnProperty("openPosition")) {
+			const value = this.openPosition;
+			delete (this as any).openPosition;
+			this.openPosition = value;
+		}
 	}
 	/**
 	 * @internal
@@ -689,6 +716,24 @@ export class DropdownMenuItemElement extends HTMLElement {
 				this.#value = newValue ?? undefined;
 				break;
 			default:
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	connectedCallback() {
+		// This object may have been interacted with before it was initialized or otherwise registered as a custom
+		// element. Which means, properties get assigned onto "this" instead of running the setter on the prototype.
+		if (this.hasOwnProperty("disabled")) {
+			const value = this.disabled;
+			delete (this as any).disabled; // Delete the property that's actually on "this"
+			this.disabled = value; // Run the setter on the prototype
+		}
+		if (this.hasOwnProperty("value")) {
+			const value = this.value;
+			delete (this as any).value; // Delete the property that's actually on "this"
+			this.value = value; // Run the setter on the prototype
 		}
 	}
 }
