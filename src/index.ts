@@ -66,7 +66,7 @@ export type DropdownOpenPosition =
 export type DropdownSelectEvent = CustomEvent<DropdownSelectEventDetails>
 /**
  * The {@link DropdownSelectEvent | `"dropdownSelect"`} event details. See the documentation for each property for
- * further explination.
+ * further explanation.
  */
 export type DropdownSelectEventDetails = {
 	/** The `<active-dropdown-menu-item>` selected. */
@@ -99,7 +99,7 @@ export type DropdownSelectCallback = (details: DropdownSelectEventDetails) => vo
  * 
  * This is a [DOM event](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) using the
  * [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail) type with the event name
- * `"dropdownSelect"`. The  {@link DropdownOpenEventDetails | `DropdownOpenEventDetails`} will be on the `.details`
+ * `"dropdownOpen"`. The  {@link DropdownOpenEventDetails | `DropdownOpenEventDetails`} will be on the `.details`
  * property of this object.
  * 
  * This event is emitted when a root {@link DropdownMenuElement | `<dropdown-menu>`} is about to be opened. It does not
@@ -117,7 +117,7 @@ export type DropdownSelectCallback = (details: DropdownSelectEventDetails) => vo
 export type DropdownOpenEvent = CustomEvent<DropdownOpenEventDetails>
 /**
  * The {@link DropdownOpenEvent | `"dropdownOpen"`} event details. See the documentation for each property for further
- * explination.
+ * explanation.
  */
 export type DropdownOpenEventDetails = {
 	/** The `<dropdown-menu>` about to be opened. */
@@ -133,10 +133,33 @@ export type DropdownOpenEventDetails = {
  * the menu from opening, and the default "click" or "contextmenu" behaviour will not be prevented.
  */
 export type DropdownOpenCallback = (details: DropdownOpenEventDetails) => void | undefined | boolean;
+
+/**
+ * The event type used in `element.addEventListener("dropdownClose", ...)`
+ * 
+ * This is a [DOM event](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) using the
+ * [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail) type with the event name
+ * `"dropdownClose"`. The  {@link DropdownCloseEventDetails | `DropdownCloseEventDetails`} will be on the `.details`
+ * property of this object.
+ * 
+ * This event is emitted when a {@link ActiveDropdownMenuElement | `<active-dropdown-menu>`} is about to be closed. It does not
+ * get emitted when a sub-menu closes.
+ */
+export type DropdownCloseEvent = CustomEvent<DropdownCloseEventDetails>;
+/**
+ * The {@link DropdownCloseEvent | `"dropdownClose"`} event details. See the documentation for each property for further
+ * explanation.
+ */
+export type DropdownCloseEventDetails = {
+	/** The `<dropdown-menu>` about to be closed. */
+	dropdownMenu: DropdownMenuElement
+};
+
 declare global {
 	interface GlobalEventHandlersEventMap {
 		"dropdownSelect": DropdownSelectEvent
 		"dropdownOpen": DropdownOpenEvent
+		"dropdownClose": DropdownCloseEvent
 	}
 }
 
@@ -160,6 +183,7 @@ let allowEvilAttributes = Boolean(document.documentElement.dataset.allowEvilAttr
  * menu is opened and when the user selects an option. For more information, see the linked documentation listed below.
  * 
  * * {@link DropdownOpenEvent | `"dropdownOpen"`}
+ * * {@link DropdownCloseEvent | `"dropdownClose"`}
  * * {@link DropdownSelectEvent | `"dropdownSelect"`}
  * 
  * This element has additional HTML attributes which can be used to define its behaviour. For more information, see the
@@ -192,6 +216,7 @@ export class DropdownMenuElement extends HTMLElement {
 			"linked-elements",
 			"ondropdownselect",
 			"ondropdownopen",
+			"ondropdownclose",
 			"open-position"
 		];
 	}
@@ -226,6 +251,15 @@ export class DropdownMenuElement extends HTMLElement {
 		// Cannot be called here, the constructor must not edit the child nodes (including attributes) in any way.
 		// hide(this);
 	}
+	dispatchCloseEvent() {
+		this.dispatchEvent(new CustomEvent("dropdownClose", {
+			cancelable: true,
+			bubbles: true,
+			detail: {
+				dropdownMenu: this,
+			} satisfies DropdownCloseEventDetails
+		}));
+	}
 	/**
 	 * Opens the menu. The `MouseEvent` is used to determine the menu position along with the element which triggered
 	 * the opening of the menu.
@@ -241,6 +275,7 @@ export class DropdownMenuElement extends HTMLElement {
 	 */
 	close() {
 		if (activeRootDropdownMenu && activeRootDropdownMenu.originalRootMenu == this) {
+			this.dispatchCloseEvent();
 			activeRootDropdownMenu.close();
 		}
 	}
@@ -257,6 +292,7 @@ export class DropdownMenuElement extends HTMLElement {
 		if (activeRootDropdownMenu && activeRootDropdownMenu.originalRootMenu == this) {
 			ev.preventDefault();
 			activeRootDropdownMenu.close();
+			this.dispatchCloseEvent();
 			return;
 		}
 		if (
@@ -346,7 +382,7 @@ export class DropdownMenuElement extends HTMLElement {
 			this.removeAttribute("ondropdownopen");
 		} else if (typeof v !== "string"){
 			this.setAttribute("ondropdownopen", "function () { [hidden code] }");
-			this.#optionSelectCallback = v;
+			this.#openCallback = v;
 		} else {
 			this.setAttribute("ondropdownopen", v);
 		}
@@ -1400,6 +1436,7 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		}
 		if (activeRootDropdownMenu == this) {
 			activeRootDropdownMenu = null;
+			this.originalRootMenu.dispatchCloseEvent();
 		}
 		if (
 			this.triggeringElement instanceof HTMLElement &&
