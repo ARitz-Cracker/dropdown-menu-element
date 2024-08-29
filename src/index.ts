@@ -142,8 +142,11 @@ export type DropdownOpenCallback = (details: DropdownOpenEventDetails) => void |
  * `"dropdownClose"`. The  {@link DropdownCloseEventDetails | `DropdownCloseEventDetails`} will be on the `.details`
  * property of this object.
  * 
- * This event is emitted when a {@link ActiveDropdownMenuElement | `<active-dropdown-menu>`} is about to be closed. It does not
- * get emitted when a sub-menu closes.
+ * This event is emitted when a root {@link ActiveDropdownMenuElement | `<active-dropdown-menu>`} is about to be
+ * closed. It does not get emitted for sub-menus. A non-bubbling version of the event will be emmitted on the
+ * associated {@link DropdownMenuElement | `<dropdown-menu>`} and a bubbling version of the event will be emitted on
+ * the element which opened the menu. This event cannot be canceled. That is, calling `preventDefault()` on this event
+ * will have no effect.
  */
 export type DropdownCloseEvent = CustomEvent<DropdownCloseEventDetails>;
 /**
@@ -153,6 +156,11 @@ export type DropdownCloseEvent = CustomEvent<DropdownCloseEventDetails>;
 export type DropdownCloseEventDetails = {
 	/** The `<dropdown-menu>` about to be closed. */
 	dropdownMenu: DropdownMenuElement
+	/**
+	 * The linked element which triggered the opening of the menu. This would be the element in which the `"click"`
+	 * or `"contextmenu"` event was listed to.
+	 */
+	triggeringElement: Element
 };
 
 declare global {
@@ -250,12 +258,18 @@ export class DropdownMenuElement extends HTMLElement {
 		// Cannot be called here, the constructor must not edit the child nodes (including attributes) in any way.
 		// hide(this);
 	}
-	dispatchCloseEvent() {
+	dispatchCloseEvent(originalTriggeringElement: Element) {
 		this.dispatchEvent(new CustomEvent("dropdownClose", {
-			cancelable: true,
+			detail: {
+				dropdownMenu: this,
+				triggeringElement: originalTriggeringElement
+			} satisfies DropdownCloseEventDetails
+		}));
+		originalTriggeringElement.dispatchEvent(new CustomEvent("dropdownClose", {
 			bubbles: true,
 			detail: {
 				dropdownMenu: this,
+				triggeringElement: originalTriggeringElement
 			} satisfies DropdownCloseEventDetails
 		}));
 	}
@@ -274,7 +288,6 @@ export class DropdownMenuElement extends HTMLElement {
 	 */
 	close() {
 		if (activeRootDropdownMenu && activeRootDropdownMenu.originalRootMenu == this) {
-			this.dispatchCloseEvent();
 			activeRootDropdownMenu.close();
 		}
 	}
@@ -291,7 +304,6 @@ export class DropdownMenuElement extends HTMLElement {
 		if (activeRootDropdownMenu && activeRootDropdownMenu.originalRootMenu == this) {
 			ev.preventDefault();
 			activeRootDropdownMenu.close();
-			this.dispatchCloseEvent();
 			return;
 		}
 		if (
@@ -1481,7 +1493,7 @@ export class ActiveDropdownMenuElement extends HTMLElement {
 		}
 		if (activeRootDropdownMenu == this) {
 			activeRootDropdownMenu = null;
-			this.originalRootMenu.dispatchCloseEvent();
+			this.originalRootMenu.dispatchCloseEvent(this.originalTriggeringElement)
 		}
 		if (
 			this.triggeringElement instanceof HTMLElement &&
