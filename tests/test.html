@@ -342,5 +342,10 @@
 				window.dialog_test.close();
 			})
 		</script>
+		<script>
+			document.body.addEventListener("dropdownClose", ev => {
+				console.log("dropdownClose event detail:" , ev.detail);
+			});
+		</script>
 	</body>	
 </html>
